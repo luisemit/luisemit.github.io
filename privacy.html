@@ -13,7 +13,6 @@
     code { background: #f6f8fa; padding: 0.1rem 0.3rem; border-radius: 4px; }
     table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
     th, td { border: 1px solid #d0d7de; padding: 0.4rem; text-align: left; vertical-align: top; }
-    .pendiente { background: #fff8c5; padding: 0.1rem 0.3rem; }
     footer { margin-top: 3rem; font-size: 0.9rem; color: #59636e; }
   </style>
 </head>
@@ -33,14 +32,17 @@
       <h3>Datos a los que accede</h3>
       <p>FileSync pide un único permiso (scope) de Google:</p>
       <ul>
-        <li><code>https://www.googleapis.com/auth/drive.readonly</code>: ver y descargar los archivos de Google
-          Drive del usuario. Es de solo lectura: FileSync no crea, modifica ni borra nada en Drive.</li>
+        <li><code>https://www.googleapis.com/auth/drive.readonly</code>: permite ver y descargar los archivos de
+          Google Drive del usuario. Es de solo lectura: FileSync no crea, modifica ni borra nada en Drive. Hoy
+          FileSync solo lo usa para leer datos de los archivos (nombres, tamaños y fechas), no su contenido; en
+          versiones futuras podrá usarlo para bajar copias de los archivos a la computadora del usuario.</li>
       </ul>
 
       <h3>Cómo se usan y se guardan</h3>
       <ul>
         <li>Todo se procesa y se guarda localmente, en el equipo del usuario. FileSync usa los datos solo para
-          copiar los archivos del usuario a su disco local.</li>
+          llevar la cuenta de qué archivos hay en Drive y en el disco del usuario y, en versiones futuras, para
+          bajar copias de esos archivos a ese disco.</li>
         <li>Las credenciales se guardan en el almacén seguro del sistema (el Llavero en macOS y Secret Service en
           Linux), no en archivos de texto. Ver la tabla.</li>
       </ul>
@@ -82,7 +84,7 @@
             <td>Hasta que el usuario borre <code>.filesync/</code>.</td>
           </tr>
           <tr>
-            <td>Configuración local: el ID de la carpeta de Drive que se sincroniza y, si se indica, el punto de
+            <td>Configuración local: el ID de la carpeta de Drive que FileSync lee y, si se indica, el punto de
               montaje del disco. Sin secretos.</td>
             <td><code>~/.config/filesync/local.toml</code></td>
             <td>Hasta que el usuario la borre.</td>
@@ -99,6 +101,8 @@
           </tr>
         </tbody>
       </table>
+      <p>Hoy FileSync no guarda el contenido de ningún archivo de Drive. Cuando una versión futura baje copias,
+        quedarán en el disco de destino del usuario hasta que el usuario las borre.</p>
 
       <h3>Qué no se hace con los datos</h3>
       <ul>
@@ -121,7 +125,8 @@
         <li>Borrar del almacén seguro del sistema (Llavero en macOS, Secret Service en Linux) las entradas del
           servicio <code>filesync</code>: <code>google-refresh-token</code> (el token) y
           <code>google-oauth-client</code>.</li>
-        <li>Si se quiere, borrar también la carpeta sincronizada.</li>
+        <li>Si una versión futura bajó copias de archivos, borrarlas también del disco de destino si se
+          quiere.</li>
       </ol>
 
       <h3>Cumplimiento de la política de Google</h3>
@@ -133,7 +138,7 @@
       <p>Si esta política cambia, se publica aquí con una nueva fecha de vigencia.</p>
 
       <h3>Contacto</h3>
-      <p><span class="pendiente">[CONTACTO: Luis lo completa]</span></p>
+      <p><a href="mailto:dnfteer@gmail.com">dnfteer@gmail.com</a></p>
     </section>
 
     <section id="en" lang="en">
@@ -144,14 +149,17 @@
       <h3>Data accessed</h3>
       <p>FileSync requests a single Google scope:</p>
       <ul>
-        <li><code>https://www.googleapis.com/auth/drive.readonly</code>: see and download the user's Google Drive
-          files. It is read-only: FileSync never creates, modifies or deletes anything in Drive.</li>
+        <li><code>https://www.googleapis.com/auth/drive.readonly</code>: allows seeing and downloading the user's
+          Google Drive files. It is read-only: FileSync never creates, modifies or deletes anything in Drive.
+          Today FileSync only uses it to read details about the files (names, sizes and dates), not their
+          content; future versions may use it to download copies of the files to the user's computer.</li>
       </ul>
 
       <h3>How data is used and stored</h3>
       <ul>
         <li>All data is processed and stored locally, on the user's own computer. FileSync uses the data only to
-          copy the user's files to their local disk.</li>
+          keep track of which files are in Drive and on the user's disk and, in future versions, to download copies
+          of those files to that disk.</li>
         <li>Credentials are stored in the operating system's secure store (the Keychain on macOS and Secret
           Service on Linux), not in plain-text files. See the table.</li>
       </ul>
@@ -191,7 +199,7 @@
             <td>Until the user deletes <code>.filesync/</code>.</td>
           </tr>
           <tr>
-            <td>Local settings: the ID of the Drive folder being synced and, optionally, the disk's mount point.
+            <td>Local settings: the ID of the Drive folder that FileSync reads and, optionally, the disk's mount point.
               No secrets.</td>
             <td><code>~/.config/filesync/local.toml</code></td>
             <td>Until the user deletes it.</td>
@@ -208,6 +216,8 @@
           </tr>
         </tbody>
       </table>
+      <p>Today FileSync does not store the content of any Drive file. When a future version downloads copies,
+        they will stay on the user's destination disk until the user deletes them.</p>
 
       <h3>What is not done with the data</h3>
       <ul>
@@ -229,7 +239,8 @@
         <li>Delete the <code>filesync</code> service entries from the system secure store (Keychain on macOS,
           Secret Service on Linux): <code>google-refresh-token</code> (the token) and
           <code>google-oauth-client</code>.</li>
-        <li>Optionally, also delete the synced folder.</li>
+        <li>If a future version downloaded copies of files, optionally delete them from the destination disk
+          too.</li>
       </ol>
 
       <h3>Compliance with Google policy</h3>
@@ -241,7 +252,7 @@
       <p>If this policy changes, the new version is published here with a new effective date.</p>
 
       <h3>Contact</h3>
-      <p><span class="pendiente">[CONTACTO: Luis lo completa]</span></p>
+      <p><a href="mailto:dnfteer@gmail.com">dnfteer@gmail.com</a></p>
     </section>
   </main>
 

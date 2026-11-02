@@ -11,6 +11,8 @@
     h1, h2, h3 { line-height: 1.25; }
     section { border-top: 1px solid #d0d7de; margin-top: 2rem; padding-top: 1rem; }
     code { background: #f6f8fa; padding: 0.1rem 0.3rem; border-radius: 4px; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+    th, td { border: 1px solid #d0d7de; padding: 0.4rem; text-align: left; vertical-align: top; }
     .pendiente { background: #fff8c5; padding: 0.1rem 0.3rem; }
     footer { margin-top: 3rem; font-size: 0.9rem; color: #59636e; }
   </style>
@@ -39,22 +41,88 @@
       <ul>
         <li>Todo se procesa y se guarda localmente, en el equipo del usuario. FileSync usa los datos solo para
           copiar los archivos del usuario a su disco local.</li>
-        <li>Los tokens de acceso de Google se guardan en el almacén seguro local del sistema (el Llavero de macOS),
-          no en archivos de texto.</li>
+        <li>Las credenciales se guardan en el almacén seguro del sistema (el Llavero en macOS y Secret Service en
+          Linux), no en archivos de texto. Ver la tabla.</li>
       </ul>
+
+      <h3>Qué se guarda, dónde y por cuánto tiempo</h3>
+      <p>FileSync no tiene retención automática por tiempo: lo que guarda se conserva hasta que el usuario lo
+        borre (ver «Cómo revocar el acceso y borrar los datos»). Todo queda en el equipo del usuario o en su disco
+        de destino.</p>
+      <table>
+        <thead>
+          <tr><th>Qué</th><th>Dónde</th><th>Cuánto tiempo</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Índice: metadatos de Drive (ID, nombre, carpeta, tipo, tamaño, suma MD5, versión, fecha de
+              modificación, si está en la papelera) y el último escaneo del disco local (rutas, tamaños y
+              fechas).</td>
+            <td><code>.filesync/index.sqlite</code>, en la raíz del disco de destino</td>
+            <td>Hasta que el usuario borre <code>.filesync/</code>. En cada actualización se quitan las entradas
+              de lo que ya no está en Drive o en el disco.</td>
+          </tr>
+          <tr>
+            <td>Historial de ejecuciones (runs): inicio y fin, modo, resultado, el tipo de fallo (nunca el
+              contenido de las respuestas de Google) y conteos.</td>
+            <td>Dentro del índice, en <code>.filesync/</code></td>
+            <td>Hasta que el usuario lo borre; no se borra solo.</td>
+          </tr>
+          <tr>
+            <td>Respaldos del índice: hasta 9 copias.</td>
+            <td><code>.filesync/backup/</code></td>
+            <td>Rotan: se guardan las 7 copias más recientes (una nueva al final de cada ejecución correcta, que
+              desplaza a la más antigua) y las 2 copias de antes de las 2 últimas actualizaciones del formato
+              del índice.</td>
+          </tr>
+          <tr>
+            <td>Configuración del disco (<code>config.toml</code>, <code>volume.json</code> con un identificador
+              aleatorio del disco) y un candado temporal.</td>
+            <td><code>.filesync/</code></td>
+            <td>Hasta que el usuario borre <code>.filesync/</code>.</td>
+          </tr>
+          <tr>
+            <td>Configuración local: el ID de la carpeta de Drive que se sincroniza y, si se indica, el punto de
+              montaje del disco. Sin secretos.</td>
+            <td><code>~/.config/filesync/local.toml</code></td>
+            <td>Hasta que el usuario la borre.</td>
+          </tr>
+          <tr>
+            <td>Credenciales: el refresh token de Google y una copia del cliente OAuth de FileSync
+              (<code>client_id</code> y <code>client_secret</code>). El access token solo vive en memoria y
+              no se guarda.</td>
+            <td>Almacén seguro del sistema (Llavero en macOS, Secret Service en Linux), servicio
+              <code>filesync</code>, entradas <code>google-refresh-token</code> y
+              <code>google-oauth-client</code></td>
+            <td>Hasta que el usuario las borre. La copia del cliente OAuth también se borra sola si Google la
+              rechaza.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h3>Qué no se hace con los datos</h3>
       <ul>
         <li>Nada se comparte, vende ni transfiere a terceros.</li>
-        <li>Nada se envía a servidores propios ni ajenos: FileSync no tiene servidores.</li>
+        <li>Ningún dato de Drive sale del equipo. FileSync no tiene servidores propios y solo se comunica con los
+          servidores de autorización de Google y con la API de Google Drive, para leer. Su propio cliente OAuth
+          (no datos de Drive) lo obtiene de la cuenta de 1Password del usuario con la herramienta
+          <code>op</code>.</li>
         <li>Los datos no se usan para publicidad, ni para crear perfiles, ni para entrenar modelos de IA.</li>
       </ul>
 
-      <h3>Cómo revocar el acceso</h3>
-      <p>El usuario puede quitar el acceso de FileSync a su cuenta en cualquier momento en
-        <a href="https://myaccount.google.com/permissions">https://myaccount.google.com/permissions</a>. Al
-        hacerlo, el token deja de valer. Para borrar los datos locales, basta con borrar la carpeta sincronizada
-        y la entrada del token en el Llavero.</p>
+      <h3>Cómo revocar el acceso y borrar los datos</h3>
+      <ol>
+        <li>Revocar el acceso de FileSync a la cuenta de Google en
+          <a href="https://myaccount.google.com/permissions">https://myaccount.google.com/permissions</a>. Al
+          hacerlo, el refresh token deja de valer.</li>
+        <li>Borrar la carpeta <code>.filesync/</code> de la raíz del disco de destino (índice, historial,
+          respaldos y configuración del disco).</li>
+        <li>Borrar la carpeta <code>~/.config/filesync/</code>.</li>
+        <li>Borrar del almacén seguro del sistema (Llavero en macOS, Secret Service en Linux) las entradas del
+          servicio <code>filesync</code>: <code>google-refresh-token</code> (el token) y
+          <code>google-oauth-client</code>.</li>
+        <li>Si se quiere, borrar también la carpeta sincronizada.</li>
+      </ol>
 
       <h3>Cumplimiento de la política de Google</h3>
       <p>El uso y la transferencia a cualquier otra aplicación de la información recibida de las API de Google
@@ -84,22 +152,85 @@
       <ul>
         <li>All data is processed and stored locally, on the user's own computer. FileSync uses the data only to
           copy the user's files to their local disk.</li>
-        <li>Google access tokens are stored in the operating system's local secure store (the macOS Keychain),
-          not in plain-text files.</li>
+        <li>Credentials are stored in the operating system's secure store (the Keychain on macOS and Secret
+          Service on Linux), not in plain-text files. See the table.</li>
       </ul>
+
+      <h3>What is stored, where, and for how long</h3>
+      <p>FileSync has no automatic time-based retention: what it stores is kept until the user deletes it (see
+        "How to revoke access and delete the data"). Everything stays on the user's computer or on their
+        destination disk.</p>
+      <table>
+        <thead>
+          <tr><th>What</th><th>Where</th><th>How long</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Index: Drive metadata (ID, name, parent folder, type, size, MD5 checksum, version, modified time,
+              whether it is in the trash) and the latest scan of the local disk (paths, sizes and times).</td>
+            <td><code>.filesync/index.sqlite</code>, at the root of the destination disk</td>
+            <td>Until the user deletes <code>.filesync/</code>. Each refresh removes the entries for items that
+              are no longer in Drive or on the disk.</td>
+          </tr>
+          <tr>
+            <td>Run history: start and end time, mode, result, the type of failure (never the content of Google's
+              responses) and counts.</td>
+            <td>Inside the index, in <code>.filesync/</code></td>
+            <td>Until the user deletes it; it is not deleted automatically.</td>
+          </tr>
+          <tr>
+            <td>Index backups: up to 9 copies.</td>
+            <td><code>.filesync/backup/</code></td>
+            <td>They rotate: the 7 most recent copies are kept (a new one at the end of each successful run
+              replaces the oldest), plus the 2 copies taken before the last 2 index format upgrades.</td>
+          </tr>
+          <tr>
+            <td>Disk settings (<code>config.toml</code>, <code>volume.json</code> with a random disk identifier)
+              and a temporary lock file.</td>
+            <td><code>.filesync/</code></td>
+            <td>Until the user deletes <code>.filesync/</code>.</td>
+          </tr>
+          <tr>
+            <td>Local settings: the ID of the Drive folder being synced and, optionally, the disk's mount point.
+              No secrets.</td>
+            <td><code>~/.config/filesync/local.toml</code></td>
+            <td>Until the user deletes it.</td>
+          </tr>
+          <tr>
+            <td>Credentials: the Google refresh token and a copy of FileSync's OAuth client
+              (<code>client_id</code> and <code>client_secret</code>). The access token only lives in memory and
+              is never stored.</td>
+            <td>The system secure store (Keychain on macOS, Secret Service on Linux), service
+              <code>filesync</code>, entries <code>google-refresh-token</code> and
+              <code>google-oauth-client</code></td>
+            <td>Until the user deletes them. The OAuth client copy is also deleted automatically if Google
+              rejects it.</td>
+          </tr>
+        </tbody>
+      </table>
 
       <h3>What is not done with the data</h3>
       <ul>
         <li>Nothing is shared with, sold to or transferred to third parties.</li>
-        <li>Nothing is sent to any server, ours or anyone else's: FileSync has no servers.</li>
+        <li>No Drive data leaves the computer. FileSync has no servers of its own and only talks to Google's
+          authorization servers and to the Google Drive API, to read. It gets its own OAuth client (not Drive
+          data) from the user's 1Password account with the <code>op</code> tool.</li>
         <li>The data is not used for advertising, profiling or training AI models.</li>
       </ul>
 
-      <h3>How to revoke access</h3>
-      <p>The user can remove FileSync's access to their account at any time at
-        <a href="https://myaccount.google.com/permissions">https://myaccount.google.com/permissions</a>. After
-        that, the token no longer works. To delete the local data, delete the synced folder and the token entry
-        in the Keychain.</p>
+      <h3>How to revoke access and delete the data</h3>
+      <ol>
+        <li>Revoke FileSync's access to the Google account at
+          <a href="https://myaccount.google.com/permissions">https://myaccount.google.com/permissions</a>. After
+          that, the refresh token no longer works.</li>
+        <li>Delete the <code>.filesync/</code> folder at the root of the destination disk (index, run history,
+          backups and disk settings).</li>
+        <li>Delete the <code>~/.config/filesync/</code> folder.</li>
+        <li>Delete the <code>filesync</code> service entries from the system secure store (Keychain on macOS,
+          Secret Service on Linux): <code>google-refresh-token</code> (the token) and
+          <code>google-oauth-client</code>.</li>
+        <li>Optionally, also delete the synced folder.</li>
+      </ol>
 
       <h3>Compliance with Google policy</h3>
       <p>FileSync's use and transfer to any other app of information received from Google APIs will adhere to the
